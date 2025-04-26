@@ -1,161 +1,83 @@
-# Task Master [![GitHub stars](https://img.shields.io/github/stars/eyaltoledano/claude-task-master?style=social)](https://github.com/eyaltoledano/claude-task-master/stargazers)
+# Task Master for Claude Desktop
 
-[![CI](https://github.com/eyaltoledano/claude-task-master/actions/workflows/ci.yml/badge.svg)](https://github.com/eyaltoledano/claude-task-master/actions/workflows/ci.yml) [![npm version](https://badge.fury.io/js/task-master-ai.svg)](https://badge.fury.io/js/task-master-ai) [![Discord Follow](https://dcbadge.limes.pink/api/server/https://discord.gg/2ms58QJjqp?style=flat)](https://discord.gg/2ms58QJjqp) [![License: MIT with Commons Clause](https://img.shields.io/badge/license-MIT%20with%20Commons%20Clause-blue.svg)](LICENSE)
+This is a modified version of [Task Master AI](https://github.com/eyaltoledano/claude-task-master) that works with Claude Desktop without requiring any external API keys.
 
-### By [@eyaltoledano](https://x.com/eyaltoledano) & [@RalphEcom](https://x.com/RalphEcom)
+## Overview
 
-[![Twitter Follow](https://img.shields.io/twitter/follow/eyaltoledano?style=flat)](https://x.com/eyaltoledano)
-[![Twitter Follow](https://img.shields.io/twitter/follow/RalphEcom?style=flat)](https://x.com/RalphEcom)
+The original Task Master AI is a task management system for AI-driven development with Claude, designed to work with Cursor AI. It requires an Anthropic API key to function properly, as it makes calls to Claude's API for generating tasks and other AI-assisted features.
 
-A task management system for AI-driven development with Claude, designed to work seamlessly with Cursor AI.
+This modified version removes the dependency on external API calls by:
 
-## Requirements
+1. Detecting when it's being used by Claude Desktop
+2. Using mock AI clients that simply return signals to Claude
+3. Letting Claude handle the actual text generation using its own capabilities
+4. Preserving the core task management functionality
 
-- Anthropic API key (Claude API)
-- OpenAI SDK (for Perplexity API integration, optional)
+## Key Modifications
 
-## Quick Start
+### AI Client Utilities
+- Replaced the Anthropic and Perplexity API clients with mock versions
+- Added a `CLAUDE_DESKTOP` environment variable to toggle the mock mode
+- Modified error handling to provide clear guidance for Claude Desktop users
 
-### Option 1 | MCP (Recommended):
+### Parse PRD Functionality
+- Updated to pass the prompt directly to Claude instead of making an API call
+- Added support for generating tasks directly within Claude's context
+- Preserved the file I/O and validation logic
 
-MCP (Model Control Protocol) provides the easiest way to get started with Task Master directly in your editor.
+### Server Implementation
+- Simplified to focus on the core functionality
+- Modified tool registration to support Claude Desktop mode
+- Added initialization logic that works without external dependencies
 
-1. **Add the MCP config to your editor** (Cursor recommended, but it works with other text editors):
+## How It Works
 
-```json
-{
-	"mcpServers": {
-		"taskmaster-ai": {
-			"command": "npx",
-			"args": ["-y", "--package=task-master-ai", "task-master-ai"],
-			"env": {
-				"ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY_HERE",
-				"PERPLEXITY_API_KEY": "YOUR_PERPLEXITY_API_KEY_HERE",
-				"MODEL": "claude-3-7-sonnet-20250219",
-				"PERPLEXITY_MODEL": "sonar-pro",
-				"MAX_TOKENS": "64000",
-				"TEMPERATURE": "0.2",
-				"DEFAULT_SUBTASKS": "5",
-				"DEFAULT_PRIORITY": "medium"
-			}
-		}
-	}
-}
-```
+When used with Claude Desktop:
 
-2. **Enable the MCP** in your editor
+1. The system initializes with `CLAUDE_DESKTOP=true` 
+2. When a task would normally trigger an API call to Claude, the system instead:
+   - Recognizes it's in Claude Desktop mode
+   - Formulates the prompt that would normally be sent to the API
+   - Returns this as a special signal to Claude
+   - Claude can then process the request directly
 
-3. **Prompt the AI** to initialize Task Master:
+This approach allows Task Master to work seamlessly without requiring API keys while still leveraging Claude's capabilities.
 
-```
-Can you please initialize taskmaster-ai into my project?
-```
+## Usage
 
-4. **Use common commands** directly through your AI assistant:
+### Setup
 
-```txt
-Can you parse my PRD at scripts/prd.txt?
-What's the next task I should work on?
-Can you help me implement task 3?
-Can you help me expand task 4?
-```
+1. Clone the repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Make the server executable:
+   ```
+   chmod +x server.js
+   ```
 
-### Option 2: Using Command Line
+### Running with Claude Desktop
 
-#### Installation
+When using with Claude Desktop, the system will automatically detect it's being run in that context and will use the modified functionality.
 
-```bash
-# Install globally
-npm install -g task-master-ai
+### Available Tools
 
-# OR install locally within your project
-npm install task-master-ai
-```
+Currently, the following tools are implemented:
 
-#### Initialize a new project
+- `initialize_project`: Sets up the basic project structure for Task Master
+- `parse_prd`: Parses a Product Requirements Document to generate tasks
 
-```bash
-# If installed globally
-task-master init
+More tools can be added following the same pattern.
 
-# If installed locally
-npx task-master-init
-```
+## Extending
 
-This will prompt you for project details and set up a new project with the necessary files and structure.
+To add more tools from the original Task Master:
 
-#### Common Commands
+1. Create modified implementations of the functionality
+2. Update the server.js to register the new tools
+3. Follow the pattern of returning prompts directly to Claude instead of making API calls
 
-```bash
-# Initialize a new project
-task-master init
+## License
 
-# Parse a PRD and generate tasks
-task-master parse-prd your-prd.txt
-
-# List all tasks
-task-master list
-
-# Show the next task to work on
-task-master next
-
-# Generate task files
-task-master generate
-```
-
-## Documentation
-
-For more detailed information, check out the documentation in the `docs` directory:
-
-- [Configuration Guide](docs/configuration.md) - Set up environment variables and customize Task Master
-- [Tutorial](docs/tutorial.md) - Step-by-step guide to getting started with Task Master
-- [Command Reference](docs/command-reference.md) - Complete list of all available commands
-- [Task Structure](docs/task-structure.md) - Understanding the task format and features
-- [Example Interactions](docs/examples.md) - Common Cursor AI interaction examples
-
-## Troubleshooting
-
-### If `task-master init` doesn't respond:
-
-Try running it with Node directly:
-
-```bash
-node node_modules/claude-task-master/scripts/init.js
-```
-
-Or clone the repository and run:
-
-```bash
-git clone https://github.com/eyaltoledano/claude-task-master.git
-cd claude-task-master
-node scripts/init.js
-```
-
-## Contributors
-
-<a href="https://github.com/eyaltoledano/claude-task-master/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=eyaltoledano/claude-task-master" alt="Task Master project contributors" />
-</a>
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=eyaltoledano/claude-task-master&type=Timeline)](https://www.star-history.com/#eyaltoledano/claude-task-master&Timeline)
-
-## Licensing
-
-Task Master is licensed under the MIT License with Commons Clause. This means you can:
-
-✅ **Allowed**:
-
-- Use Task Master for any purpose (personal, commercial, academic)
-- Modify the code
-- Distribute copies
-- Create and sell products built using Task Master
-
-❌ **Not Allowed**:
-
-- Sell Task Master itself
-- Offer Task Master as a hosted service
-- Create competing products based on Task Master
-
-See the [LICENSE](LICENSE) file for the complete license text and [licensing details](docs/licensing.md) for more information.
+This project is a modified version of [Task Master AI](https://github.com/eyaltoledano/claude-task-master) and follows its original license.
